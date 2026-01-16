@@ -3,6 +3,17 @@
   "version": "0.0.0",
   "private": true,
   "devDependencies": {
-    "semantic-release": "^24.0.0"
+    "pkg": "^5.10.8",
+    "semantic-release": "^24.0.0",
+    "@semantic-release/commit-analyzer": "^10.0.0",
+    "@semantic-release/release-notes-generator": "^10.0.0",
+    "@semantic-release/github": "^10.0.0"
+  },
+  "scripts": {
+    "build:bin": "pkg . --targets node18-linux-x64,node18-macos-x64,node18-win-x64 --out-path dist"
+  },
+  "pkg": {
+    "scripts": ["index.js"],
+    "assets": []
   }
 }

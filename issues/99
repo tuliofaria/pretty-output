@@ -1,0 +1,72 @@
+### Observations:
+
+The job in [GitHub Actions](https://github.com/tuliofaria/pretty-output/actions/runs/21069119908/job/60593739833) failed due to the following:
+
+1. **npm ci error:** The `npm ci` command fails because the `package-lock.json` file is missing.
+    - Error Message: `npm error The npm ci command can only install with an existing package-lock.json...`
+    - `npm ci` requires a `package-lock.json` or `npm-shrinkwrap.json` file in the repository to run correctly.
+
+2. **npm install error:** The dependency "pkg" in the `package.json` has a version that doesn't exist in the npm registry (`pkg@^5.10.8`).
+    - Error Message: `npm error notarget No matching version found for pkg@^5.10.8.`
+
+---
+
+### Affected Files:
+- [package.json](https://github.com/tuliofaria/pretty-output/blob/0fc884fae84698c9dd83221ee9503fd0e25e6b02/package.json)
+- [.github/workflows/release.yml](https://github.com/tuliofaria/pretty-output/blob/0fc884fae84698c9dd83221ee9503fd0e25e6b02/.github/workflows/release.yml)
+
+---
+
+### Recommended Fixes:
+
+#### 1. Generate and Commit `package-lock.json`
+Locally:
+- Run: `npm install`
+- Commit the resulting `package-lock.json` file:
+    ```bash
+    git add package-lock.json
+    git commit -m "chore: add package-lock.json for CI"
+    git push
+    ```
+
+#### 2. Correct the Version for `pkg`
+- Check the npm registry for the latest version of "pkg":
+    ```bash
+    npm view pkg versions --json
+    ```
+  or simply fetch the latest version:
+    ```bash
+    npm info pkg version
+    ```
+- Update `package.json` to point to a valid version for "pkg". Example:
+    ```json
+    "pkg": "^5.8.0"
+    ```
+- Regenerate the `package-lock.json`:
+    ```bash
+    npm install
+    ```
+- Commit changes:
+    ```bash
+    git add package.json package-lock.json
+    git commit -m "chore: fix pkg version and update lockfile"
+    git push
+    ```
+
+#### Optional: Workflow Adjustment
+To ensure CI robustness, modify the workflow to only use `npm ci` if a lockfile exists:
+```yaml
+      run: |
+        if [ -f package-lock.json ]; then
+          npm ci
+        else
+          npm install
+        fi
+```
+However, committing the lockfile is the recommended and preferred approach.
+
+### Context:
+
+- Repo: [tuliofaria/pretty-output](https://github.com/tuliofaria/pretty-output)
+- Workflow: Release ([definition](https://github.com/tuliofaria/pretty-output/blob/0fc884fae84698c9dd83221ee9503fd0e25e6b02/.github/workflows/release.yml))
+- Failure Link: [Job 60593739833](https://github.com/tuliofaria/pretty-output/actions/runs/21069119908/job/60593739833)

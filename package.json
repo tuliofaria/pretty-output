@@ -1,0 +1,8 @@
+{
+  "name": "pretty-output",
+  "version": "0.0.0",
+  "private": true,
+  "devDependencies": {
+    "semantic-release": "^24.0.0"
+  }
+}

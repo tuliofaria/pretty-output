@@ -5,8 +5,47 @@ on:
     branches: [main]
 
 jobs:
+  build:
+    name: Build binaries
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            target: node18-linux-x64
+          - os: macos-latest
+            target: node18-macos-x64
+          - os: windows-latest
+            target: node18-win-x64
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci || npm install
+
+      - name: Build binary with pkg
+        run: |
+          mkdir -p dist
+          npx pkg . --targets ${{ matrix.target }} --out-path dist
+
+      - name: Upload binary artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: pretty-output-${{ matrix.os }}
+          path: dist/
+
   release:
+    name: Create GitHub release (semantic-release) and attach binaries
     runs-on: ubuntu-latest
+    needs: build
     permissions:
       contents: write
       issues: write
@@ -17,10 +56,25 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Download build artifacts
+        uses: actions/download-artifact@v4.1.3
+        with:
+          path: artifacts
+
+      - name: Collect binaries into dist/
+        run: |
+          mkdir -p dist
+          for d in ./artifacts/*; do
+            if [ -d "$d" ]; then
+              cp "$d"/* dist/ || true
+            fi
+          done
+          ls -la dist
+
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 'lts/*'
+          node-version: '18'
 
       - name: Install dependencies
         run: npm ci || npm install
